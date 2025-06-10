@@ -108,7 +108,7 @@ function App() {
       <header className="header">
         <div className="header-content">
           <div className="logo-container">
-            <img src="/vite.svg" alt="Logo" className="logo" />
+            <img src="/favicon.svg" alt="Favicon Logo" className="logo" style={{ width: 40, height: 40 }} />
             <span className="brand-name">QR Code Pro</span>
           </div>
           <nav className="nav-links">
