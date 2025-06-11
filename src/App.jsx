@@ -191,7 +191,7 @@ function App() {
                   onChange={(e) => handleSettingChange('margin', Number(e.target.value))}
                   style={{ width: '100%', cursor: 'pointer' }}
                 />
-              </div>
+                </div>
               <div className="error-correction">
                 <label>Error Correction Level</label>
                 <select 
