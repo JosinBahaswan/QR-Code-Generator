@@ -294,11 +294,11 @@ function App() {
           </div>
           <div className="footer-section">
             <h3>Contact Us</h3>
-            <a href="mailto:support@qrcodepro.com" className="footer-link">support@qrcodepro.com</a>
+            <a href="mailto:josinbahaswan@gmail.com" className="footer-link">josinbahaswan@gmail.com</a>
             <div className="social-links">
               <a href="#" className="social-link">Twitter</a>
               <a href="#" className="social-link">LinkedIn</a>
-              <a href="#" className="social-link">GitHub</a>
+              <a href="https://github.com/JosinBahaswan" className="social-link">GitHub</a>
             </div>
           </div>
         </div>
