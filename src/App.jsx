@@ -28,6 +28,8 @@ function App() {
   });
   const [loading, setLoading] = useState(false);
   const [toasts, setToasts] = useState([]);
+  const [logo, setLogo] = useState(null);
+  const [logoUrl, setLogoUrl] = useState('');
   const qrRef = useRef();
   const year = new Date().getFullYear();
 
@@ -37,6 +39,18 @@ function App() {
       ...prevSettings,
       [key]: value
     }));
+  };
+
+  const handleLogoChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setLogo(file);
+      const url = URL.createObjectURL(file);
+      setLogoUrl(url);
+    } else {
+      setLogo(null);
+      setLogoUrl('');
+    }
   };
 
   const downloadQR = () => {
@@ -51,11 +65,26 @@ function App() {
       ctx.fillStyle = settings.lightColor;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
       ctx.drawImage(img, 0, 0);
-      
-      const a = document.createElement("a");
-      a.download = "qr-code.png";
-      a.href = canvas.toDataURL("image/png");
-      a.click();
+      // Jika ada logo, gambar di tengah
+      if (logoUrl) {
+        const logoImg = new Image();
+        logoImg.onload = () => {
+          const logoSize = settings.size * 0.2; // 20% dari QR
+          const x = (settings.size - logoSize) / 2;
+          const y = (settings.size - logoSize) / 2;
+          ctx.drawImage(logoImg, x, y, logoSize, logoSize);
+          const a = document.createElement("a");
+          a.download = "qr-code.png";
+          a.href = canvas.toDataURL("image/png");
+          a.click();
+        };
+        logoImg.src = logoUrl;
+      } else {
+        const a = document.createElement("a");
+        a.download = "qr-code.png";
+        a.href = canvas.toDataURL("image/png");
+        a.click();
+      }
     };
     img.src = `data:image/svg+xml;base64,${btoa(svgData)}`;
   };
@@ -191,7 +220,7 @@ function App() {
                   onChange={(e) => handleSettingChange('margin', Number(e.target.value))}
                   style={{ width: '100%', cursor: 'pointer' }}
                 />
-                </div>
+              </div>
               <div className="error-correction">
                 <label>Error Correction Level</label>
                 <select 
@@ -205,29 +234,73 @@ function App() {
                   <option value="H">High (30%)</option>
                 </select>
               </div>
+              <div className="logo-upload" style={{ marginTop: 24, display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 8 }}>
+                <label htmlFor="logo-input" className="upload-label" style={{ fontWeight: 500, marginBottom: 4 }}>
+                  Upload Logo (optional)
+                </label>
+                <input 
+                  id="logo-input"
+                  type="file" 
+                  accept="image/*"
+                  onChange={handleLogoChange}
+                  className="file-input"
+                  style={{ padding: 0, border: 'none', background: 'none' }}
+                />
+                {logoUrl && (
+                  <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <img src={logoUrl} alt="Logo Preview" style={{ width: 40, height: 40, borderRadius: 8, objectFit: 'contain', background: '#fff', border: '1px solid #eee', boxShadow: '0 1px 4px #0001' }} />
+                    <span style={{ fontSize: 13, color: '#555' }}>{logo?.name}</span>
+                    <button type="button" onClick={() => { setLogo(null); setLogoUrl(''); }} style={{ marginLeft: 8, background: '#eee', border: 'none', borderRadius: 4, padding: '2px 8px', cursor: 'pointer', fontSize: 12 }}>Remove</button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
           <div className="preview-section">
             <h3 className="preview-title">Preview</h3>
-            <div className="qr-container" ref={qrRef}>
-              <QRCodeSVG
-                value={text || 'https://example.com'}
-                size={settings.size}
-                bgColor={settings.lightColor}
-                fgColor={settings.darkColor}
-                level={settings.errorCorrectionLevel}
-                includeMargin={true}
-                margin={settings.margin}
-              />
+            <div className="qr-preview-wrapper" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
+              <div className="qr-container" ref={qrRef} style={{ position: 'relative', display: 'inline-block', background: '#fff', padding: 16, borderRadius: 16, boxShadow: '0 2px 12px #0002', marginBottom: 8 }}>
+                <QRCodeSVG
+                  value={text || 'https://example.com'}
+                  size={settings.size}
+                  bgColor={settings.lightColor}
+                  fgColor={settings.darkColor}
+                  level={settings.errorCorrectionLevel}
+                  includeMargin={true}
+                  margin={settings.margin}
+                />
+                {logoUrl && (
+                  <img
+                    src={logoUrl}
+                    alt="Logo Preview"
+                    style={{
+                      position: 'absolute',
+                      left: '50%',
+                      top: '50%',
+                      width: settings.size * 0.2,
+                      height: settings.size * 0.2,
+                      transform: 'translate(-50%, -50%)',
+                      pointerEvents: 'none',
+                      borderRadius: '12px',
+                      objectFit: 'contain',
+                      background: '#fff',
+                      boxShadow: '0 1px 6px #0002',
+                      border: '2px solid #eee',
+                      zIndex: 2
+                    }}
+                  />
+                )}
+              </div>
+              <button 
+                className="download-btn"
+                onClick={downloadQR}
+                disabled={!text}
+                style={{ marginTop: 0, zIndex: 1 }}
+              >
+                Download QR Code
+              </button>
             </div>
-            <button 
-              className="download-btn"
-              onClick={downloadQR}
-              disabled={!text}
-            >
-              Download QR Code
-            </button>
           </div>
         </div>
 
