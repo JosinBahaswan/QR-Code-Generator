@@ -30,6 +30,7 @@ function App() {
   const [toasts, setToasts] = useState([]);
   const [logo, setLogo] = useState(null);
   const [logoUrl, setLogoUrl] = useState('');
+  const [shape, setShape] = useState('square'); // 'square' | 'rounded' | 'circle'
   const qrRef = useRef();
   const year = new Date().getFullYear();
 
@@ -53,6 +54,11 @@ function App() {
     }
   };
 
+  // Tambahkan handler untuk shape
+  const handleShapeChange = (e) => {
+    setShape(e.target.value);
+  };
+
   const downloadQR = () => {
     const canvas = document.createElement("canvas");
     const svg = qrRef.current.querySelector("svg");
@@ -64,15 +70,39 @@ function App() {
       const ctx = canvas.getContext("2d");
       ctx.fillStyle = settings.lightColor;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
+      // Terapkan shape pada hasil download
+      if (shape === 'circle') {
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(settings.size / 2, settings.size / 2, settings.size / 2, 0, 2 * Math.PI);
+        ctx.closePath();
+        ctx.clip();
+      } else if (shape === 'rounded') {
+        const radius = 16;
+        ctx.save();
+        ctx.beginPath();
+        ctx.moveTo(radius, 0);
+        ctx.lineTo(settings.size - radius, 0);
+        ctx.quadraticCurveTo(settings.size, 0, settings.size, radius);
+        ctx.lineTo(settings.size, settings.size - radius);
+        ctx.quadraticCurveTo(settings.size, settings.size, settings.size - radius, settings.size);
+        ctx.lineTo(radius, settings.size);
+        ctx.quadraticCurveTo(0, settings.size, 0, settings.size - radius);
+        ctx.lineTo(0, radius);
+        ctx.quadraticCurveTo(0, 0, radius, 0);
+        ctx.closePath();
+        ctx.clip();
+      }
       ctx.drawImage(img, 0, 0);
       // Jika ada logo, gambar di tengah
       if (logoUrl) {
         const logoImg = new Image();
         logoImg.onload = () => {
-          const logoSize = settings.size * 0.2; // 20% dari QR
+          const logoSize = settings.size * 0.2;
           const x = (settings.size - logoSize) / 2;
           const y = (settings.size - logoSize) / 2;
           ctx.drawImage(logoImg, x, y, logoSize, logoSize);
+          ctx.restore && ctx.restore();
           const a = document.createElement("a");
           a.download = "qr-code.png";
           a.href = canvas.toDataURL("image/png");
@@ -80,6 +110,7 @@ function App() {
         };
         logoImg.src = logoUrl;
       } else {
+        ctx.restore && ctx.restore();
         const a = document.createElement("a");
         a.download = "qr-code.png";
         a.href = canvas.toDataURL("image/png");
@@ -254,13 +285,38 @@ function App() {
                   </div>
                 )}
               </div>
+              <div className="shape-selector" style={{ marginTop: 16 }}>
+                <label htmlFor="shape-select" className="options-title" style={{ display: 'block', marginBottom: 8 }}>
+                  QR Code Shape
+                </label>
+                <select 
+                  id="shape-select"
+                  value={shape}
+                  onChange={handleShapeChange}
+                  className="select-input"
+                  style={{ width: '100%', padding: '8px', borderRadius: 4, border: '1px solid #ccc', background: '#fff', cursor: 'pointer' }}
+                >
+                  <option value="square">Square</option>
+                  <option value="rounded">Rounded</option>
+                  <option value="circle">Circle</option>
+                </select>
+              </div>
             </div>
           </div>
 
           <div className="preview-section">
             <h3 className="preview-title">Preview</h3>
             <div className="qr-preview-wrapper" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
-              <div className="qr-container" ref={qrRef} style={{ position: 'relative', display: 'inline-block', background: '#fff', padding: 16, borderRadius: 16, boxShadow: '0 2px 12px #0002', marginBottom: 8 }}>
+              <div className="qr-container" ref={qrRef} style={{ 
+                position: 'relative', 
+                display: 'inline-block', 
+                background: '#fff', 
+                padding: 16, 
+                borderRadius: shape === 'rounded' ? '16px' : shape === 'circle' ? '50%' : '0',
+                boxShadow: '0 2px 12px #0002', 
+                marginBottom: 8,
+                overflow: 'hidden'
+              }}>
                 <QRCodeSVG
                   value={text || 'https://example.com'}
                   size={settings.size}
@@ -269,6 +325,10 @@ function App() {
                   level={settings.errorCorrectionLevel}
                   includeMargin={true}
                   margin={settings.margin}
+                  style={{ 
+                    borderRadius: shape === 'rounded' ? '16px' : shape === 'circle' ? '50%' : '0',
+                    overflow: 'hidden'
+                  }}
                 />
                 {logoUrl && (
                   <img
