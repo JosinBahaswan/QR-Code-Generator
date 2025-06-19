@@ -59,7 +59,7 @@ function App() {
     setShape(e.target.value);
   };
 
-  const downloadQR = () => {
+  const downloadQR = (format = 'png') => {
     const canvas = document.createElement("canvas");
     const svg = qrRef.current.querySelector("svg");
     const svgData = new XMLSerializer().serializeToString(svg);
@@ -95,6 +95,18 @@ function App() {
       }
       ctx.drawImage(img, 0, 0);
       // Jika ada logo, gambar di tengah
+      const finishDownload = () => {
+        ctx.restore && ctx.restore();
+        const a = document.createElement("a");
+        if (format === 'jpg' || format === 'jpeg') {
+          a.download = "qr-code.jpg";
+          a.href = canvas.toDataURL("image/jpeg", 0.95);
+        } else {
+          a.download = `qr-code.${format}`;
+          a.href = canvas.toDataURL(`image/${format}`);
+        }
+        a.click();
+      };
       if (logoUrl) {
         const logoImg = new Image();
         logoImg.onload = () => {
@@ -102,22 +114,26 @@ function App() {
           const x = (settings.size - logoSize) / 2;
           const y = (settings.size - logoSize) / 2;
           ctx.drawImage(logoImg, x, y, logoSize, logoSize);
-          ctx.restore && ctx.restore();
-          const a = document.createElement("a");
-          a.download = "qr-code.png";
-          a.href = canvas.toDataURL("image/png");
-          a.click();
+          finishDownload();
         };
         logoImg.src = logoUrl;
       } else {
-        ctx.restore && ctx.restore();
-        const a = document.createElement("a");
-        a.download = "qr-code.png";
-        a.href = canvas.toDataURL("image/png");
-        a.click();
+        finishDownload();
       }
     };
     img.src = `data:image/svg+xml;base64,${btoa(svgData)}`;
+  };
+
+  const downloadSVG = () => {
+    const svg = qrRef.current.querySelector("svg");
+    const svgData = new XMLSerializer().serializeToString(svg);
+    const blob = new Blob([svgData], { type: 'image/svg+xml' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'qr-code.svg';
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
 
   const showToast = (message, type = 'success') => {
@@ -352,14 +368,32 @@ function App() {
                   />
                 )}
               </div>
-              <button 
-                className="download-btn"
-                onClick={downloadQR}
-                disabled={!text}
-                style={{ marginTop: 0, zIndex: 1 }}
-              >
-                Download QR Code
-              </button>
+              <div className="download-buttons" style={{ display: 'flex', gap: 16 }}>
+                <button 
+                  className="download-btn"
+                  onClick={() => downloadQR('png')}
+                  disabled={!text}
+                  style={{ marginTop: 0, zIndex: 1 }}
+                >
+                  Download as PNG
+                </button>
+                <button 
+                  className="download-btn"
+                  onClick={() => downloadQR('jpg')}
+                  disabled={!text}
+                  style={{ marginTop: 0, zIndex: 1 }}
+                >
+                  Download as JPG
+                </button>
+                <button 
+                  className="download-btn"
+                  onClick={() => downloadSVG()}
+                  disabled={!text}
+                  style={{ marginTop: 0, zIndex: 1 }}
+                >
+                  Download as SVG
+                </button>
+              </div>
             </div>
           </div>
         </div>
