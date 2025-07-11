@@ -31,6 +31,14 @@ function App() {
   const [logo, setLogo] = useState(null);
   const [logoUrl, setLogoUrl] = useState('');
   const [shape, setShape] = useState('square'); // 'square' | 'rounded' | 'circle'
+  const [qrType, setQrType] = useState('url'); // 'url' | 'vcard'
+  const [contact, setContact] = useState({
+    name: '',
+    phone: '',
+    email: '',
+    org: '',
+    title: ''
+  });
   const qrRef = useRef();
   const year = new Date().getFullYear();
 
@@ -52,6 +60,10 @@ function App() {
       setLogo(null);
       setLogoUrl('');
     }
+  };
+
+  const handleContactChange = (key, value) => {
+    setContact(prev => ({ ...prev, [key]: value }));
   };
 
   // Tambahkan handler untuk shape
@@ -145,12 +157,19 @@ function App() {
     setToasts(prev => prev.filter(toast => toast.id !== id));
   };
 
+  const getVCardString = (contact) => {
+    return `BEGIN:VCARD\nVERSION:3.0\nN:${contact.name}\\nFN:${contact.name}\nORG:${contact.org}\nTITLE:${contact.title}\nTEL;TYPE=CELL:${contact.phone}\nEMAIL:${contact.email}\nEND:VCARD`;
+  };
+
   const generateQRCode = async () => {
-    if (!text) {
-      showToast('Please enter a URL', 'error');
+    let qrValue = text;
+    if (qrType === 'vcard') {
+      qrValue = getVCardString(contact);
+    }
+    if (!qrValue || (qrType === 'vcard' && !contact.name)) {
+      showToast(qrType === 'vcard' ? 'Please enter contact name' : 'Please enter a URL', 'error');
       return;
     }
-
     setLoading(true);
     try {
       const options = {
@@ -163,7 +182,7 @@ function App() {
         width: settings.size
       };
 
-      const qrDataUrl = await QRCode.toDataURL(text, options);
+      const qrDataUrl = await QRCode.toDataURL(qrValue, options);
       setQrCode(qrDataUrl);
       showToast('QR Code generated successfully!');
     } catch (error) {
@@ -203,15 +222,43 @@ function App() {
 
         <div className="container">
           <div className="input-group">
-            <label htmlFor="qr-input" className="input-label">Enter your text or URL</label>
-            <input 
-              id="qr-input"
-              type="text" 
-              placeholder="https://your-website.com" 
-              value={text} 
-              onChange={(e) => setText(e.target.value)}
-              className="text-input"
-            />
+            <label htmlFor="qr-type" className="input-label">QR Type</label>
+            <select
+              id="qr-type"
+              value={qrType}
+              onChange={e => setQrType(e.target.value)}
+              className="select-input"
+              style={{ marginBottom: 12 }}
+            >
+              <option value="url">URL/Text</option>
+              <option value="vcard">Contact (VCard)</option>
+            </select>
+            {qrType === 'url' ? (
+              <>
+                <label htmlFor="qr-input" className="input-label">Enter your text or URL</label>
+                <input 
+                  id="qr-input"
+                  type="text" 
+                  placeholder="https://your-website.com" 
+                  value={text} 
+                  onChange={(e) => setText(e.target.value)}
+                  className="text-input"
+                />
+              </>
+            ) : (
+              <div className="contact-fields" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <label className="input-label">Name</label>
+                <input type="text" value={contact.name} onChange={e => handleContactChange('name', e.target.value)} className="text-input" placeholder="Full Name" />
+                <label className="input-label">Phone</label>
+                <input type="text" value={contact.phone} onChange={e => handleContactChange('phone', e.target.value)} className="text-input" placeholder="Phone Number" />
+                <label className="input-label">Email</label>
+                <input type="email" value={contact.email} onChange={e => handleContactChange('email', e.target.value)} className="text-input" placeholder="Email" />
+                <label className="input-label">Organization</label>
+                <input type="text" value={contact.org} onChange={e => handleContactChange('org', e.target.value)} className="text-input" placeholder="Company/Organization" />
+                <label className="input-label">Title</label>
+                <input type="text" value={contact.title} onChange={e => handleContactChange('title', e.target.value)} className="text-input" placeholder="Job Title" />
+              </div>
+            )}
           </div>
 
           <div className="options">
