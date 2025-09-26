@@ -72,6 +72,21 @@ function App() {
   };
 
   const downloadQR = (format = 'png') => {
+    if (format === 'svg') {
+      // Download as SVG
+      const svg = qrRef.current.querySelector("svg");
+      const svgData = new XMLSerializer().serializeToString(svg);
+      const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(svgBlob);
+      link.download = `qrcode.svg`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      return;
+    }
+
+    // For PNG and JPG
     const canvas = document.createElement("canvas");
     const svg = qrRef.current.querySelector("svg");
     const svgData = new XMLSerializer().serializeToString(svg);
@@ -82,6 +97,7 @@ function App() {
       const ctx = canvas.getContext("2d");
       ctx.fillStyle = settings.lightColor;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
+      
       // Terapkan shape pada hasil download
       if (shape === 'circle') {
         ctx.save();
@@ -134,18 +150,6 @@ function App() {
       }
     };
     img.src = `data:image/svg+xml;base64,${btoa(svgData)}`;
-  };
-
-  const downloadSVG = () => {
-    const svg = qrRef.current.querySelector("svg");
-    const svgData = new XMLSerializer().serializeToString(svg);
-    const blob = new Blob([svgData], { type: 'image/svg+xml' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'qr-code.svg';
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
 
   const showToast = (message, type = 'success') => {
@@ -434,7 +438,7 @@ function App() {
                 </button>
                 <button 
                   className="download-btn"
-                  onClick={() => downloadSVG()}
+                  onClick={() => downloadQR('svg')}
                   disabled={!text}
                   style={{ marginTop: 0, zIndex: 1 }}
                 >
