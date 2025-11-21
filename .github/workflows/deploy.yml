@@ -3,6 +3,8 @@ name: CI CD
 on:
   push:
     branches: ['main']
+  pull_request:
+    branches: ['main']
 
 jobs:
   lint-and-format:
@@ -19,28 +21,20 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # - name: Run ESLint
-      #   run: npm run lint -- --max-warnings=0
-
-      # - name: Run Prettier check
-      #   run: npm run format:check
-
   deploy:
     runs-on: ubuntu-latest
     needs: lint-and-format
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     steps:
       - name: Deploy to VPS via SSH
-        uses: appleboy/ssh-action@v1.0.3
+        uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.HOST }}
           username: ${{ secrets.USERNAME }}
           password: ${{ secrets.PASSWORD }}
-          port: ${{ secrets.PORT }}
           script: |
             cd /var/www/tpms-frontend/
-            git fetch --all
-            git reset --hard origin/main
-            npm install
+            git reset --hard HEAD
+            git pull origin main
+            npm ci --omit=dev
             npm run build
-            sudo systemctl restart nginx
