@@ -34,7 +34,7 @@ jobs:
           password: ${{ secrets.PASSWORD }}
           port: ${{ secrets.PORT }}
           script: |
-            cd /var/www/tpms-frontend/
+            cd /var/www/qrcode
             git reset --hard HEAD
             git pull origin main
             npm ci --omit=dev
