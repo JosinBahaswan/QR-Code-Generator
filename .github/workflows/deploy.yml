@@ -37,5 +37,5 @@ jobs:
             cd /var/www/QR-Code-Generator
             git reset --hard HEAD
             git pull origin main
-            npm ci --omit=dev
+            npm i
             npm run build
