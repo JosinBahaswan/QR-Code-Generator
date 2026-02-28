@@ -18,7 +18,7 @@ function Toast({ message, type, onClose }) {
 
 function App() {
   const [text, setText] = useState('');
-  const [qrCode, setQrCode] = useState('');
+  const [ setQrCode] = useState('');
   const [settings, setSettings] = useState({
     darkColor: '#000000',
     lightColor: '#FFFFFF',
@@ -26,7 +26,7 @@ function App() {
     margin: 4,
     errorCorrectionLevel: 'M'
   });
-  const [loading, setLoading] = useState(false);
+  const [ setLoading] = useState(false);
   const [toasts, setToasts] = useState([]);
   const [logo, setLogo] = useState(null);
   const [logoUrl, setLogoUrl] = useState('');
